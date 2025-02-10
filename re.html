@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>正则替换工具</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      margin-top: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"],
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    textarea {
+      height: 200px;
+      font-family: monospace;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>正则替换工具</h1>
+  <!-- 文件选择 -->
+  <input type="file" id="fileInput" accept=".txt,.html,.xhtml" />
+
+  <!-- 正则表达式输入 -->
+  <label for="regexPattern">正则表达式（pattern）：</label>
+  <input type="text" id="regexPattern" placeholder="例如：(\\d+)" />
+
+  <label for="regexFlags">正则标志（flags）：</label>
+  <input type="text" id="regexFlags" placeholder="例如：g" />
+
+  <!-- 替换字符串 -->
+  <label for="replacement">替换字符串（replacement）：</label>
+  <input type="text" id="replacement" placeholder="例如：Number: \1 或者包含换行符\\n" />
+
+  <button id="replaceButton">执行替换</button>
+
+  <!-- 显示文件内容 -->
+  <h2>原始文件内容</h2>
+  <textarea id="fileContent" placeholder="文件内容会显示在这里"></textarea>
+
+  <!-- 显示替换后内容 -->
+  <h2>替换后内容</h2>
+  <textarea id="resultContent" placeholder="替换后内容会显示在这里"></textarea>
+
+  <button id="downloadButton">下载替换后文件</button>
+
+  <script>
+    // 选择文件后读取内容
+    document.getElementById("fileInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById("fileContent").value = evt.target.result;
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // 点击替换按钮时，执行正则替换
+    document.getElementById("replaceButton").addEventListener("click", function() {
+      const content = document.getElementById("fileContent").value;
+      const pattern = document.getElementById("regexPattern").value;
+      const flags = document.getElementById("regexFlags").value;
+      const replacement = document.getElementById("replacement").value;
+
+      try {
+        const regex = new RegExp(pattern, flags);
+        // 处理替换字符串：
+        // 1. 将用户输入的 "\n" 转换为实际的换行符
+        // 2. 将类似 "\1" 的转化为 JavaScript replace 支持的 "$1"
+        let fixedReplacement = replacement.replace(/\\n/g, "\n");
+        fixedReplacement = fixedReplacement.replace(/\\(\d+)/g, "\$$1");
+
+        // 执行替换操作
+        const result = content.replace(regex, fixedReplacement);
+        document.getElementById("resultContent").value = result;
+      } catch (error) {
+        alert("正则表达式错误：" + error.message);
+      }
+    });
+
+    // 下载替换后的文件
+    document.getElementById("downloadButton").addEventListener("click", function() {
+      const result = document.getElementById("resultContent").value;
+      const blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "result.txt";
+      link.click();
+    });
+  </script>
+</body>
+</html>
